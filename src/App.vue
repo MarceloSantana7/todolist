@@ -1,6 +1,6 @@
 <!-- eslint-disable @typescript-eslint/no-unused-vars -->
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const tarefas = ref([
   { id: 1, texto: 'Estudar Vue 3', concluida: true },
@@ -8,6 +8,7 @@ const tarefas = ref([
   { id: 3, texto: 'Ler documentação', concluida: false },
 ])
 const novaTarefa = ref('')
+const filtroAtivo = ref('todas')
 
 function adicionarTarefa() {
   if (novaTarefa.value.trim() !== '') {
@@ -23,6 +24,21 @@ function adicionarTarefa() {
 function removerTarefa(id) {
   tarefas.value = tarefas.value.filter((tarefa) => tarefa.id !== id)
 }
+
+const tarefasPendentes = computed(() => {
+  return tarefas.value.filter((tarefa) => !tarefa.concluida).length
+})
+
+const tarefasFiltradas = computed(() => {
+  switch (filtroAtivo.value) {
+    case 'ativas':
+      return tarefas.value.filter((tarefa) => !tarefa.concluida)
+    case 'concluidas':
+      return tarefas.value.filter((tarefa) => tarefa.concluida)
+    default:
+      return tarefas.value
+  }
+})
 </script>
 
 <template>
@@ -33,8 +49,33 @@ function removerTarefa(id) {
       <button type="submit">Adicionar</button>
     </form>
 
+    <div class="filtros">
+      <div class="botoes-filtro">
+        <button @click="filtroAtivo = 'todas'" :class="{ ativo: filtroAtivo === 'todas' }">
+          Todas
+        </button>
+        <button @click="filtroAtivo = 'ativas'" :class="{ ativo: filtroAtivo === 'ativas' }">
+          Ativas
+        </button>
+        <button
+          @click="filtroAtivo = 'concluidas'"
+          :class="{ ativo: filtroAtivo === 'concluidas' }"
+        >
+          Concluídas
+        </button>
+      </div>
+      <span class="contador">
+        {{ tarefasPendentes }}
+        {{ tarefasPendentes === 1 ? 'tarefa pendente' : 'tarefas pendentes' }}
+      </span>
+    </div>
+
     <ul>
-      <li v-for="tarefa in tarefas" :key="tarefa.id" :class="{ concluida: tarefa.concluida }">
+      <li
+        v-for="tarefa in tarefasFiltradas"
+        :key="tarefa.id"
+        :class="{ concluida: tarefa.concluida }"
+      >
         <input type="checkbox" v-model="tarefa.concluida" />
         <span>{{ tarefa.texto }}</span>
         <button @click="removerTarefa(tarefa.id)" class="remover">❌</button>
@@ -107,5 +148,38 @@ li span {
   border: none;
   cursor: pointer;
   font-size: 1rem;
+}
+
+.filtros {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.botoes-filtro button {
+  margin-right: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid #41b883;
+  background-color: transparent;
+  color: #41b883;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.botoes-filtro button.ativo {
+  background-color: #41b883;
+  color: white;
+}
+
+.contador {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+input[type='checkbox'] {
+  cursor: pointer;
 }
 </style>
